@@ -3,96 +3,47 @@ from fetchGS import get_authenticated_service, get_all_sheet_data
 service = get_authenticated_service()
 all_data = get_all_sheet_data(service)
 
-
 def generate_player_list(sheet_name, data):
     header = data[0]
     player_data = data[1:]
-    players = []
-
-    for playerInfo in player_data:
-        playerDict = {}
-        for i, value in enumerate(playerInfo):
-            header_name = header[i]
-            playerDict[header_name] = value
-        players.append(playerDict)
-
-    return players
-
+    return [{header[i]: value for i, value in enumerate(playerInfo)} for playerInfo in player_data]
 
 SHEETS_NAMES = ['Buts', 'Dividendes', 'Dividendes Dernière journée', 'PPF', 'PRIX', 'Passe Dé', 'Penalty Reussi',
                 'CARTONS JAUNE', 'ARRETS GARDIEN', 'TITULARISATION', 'MATCH JOUÉ']
 
-players_by_sheet = {}
+players_by_sheet = {sheet_name: generate_player_list(sheet_name, all_data[sheet_name]) for sheet_name in SHEETS_NAMES}
 
-for sheet_name in SHEETS_NAMES:
-    players_by_sheet[sheet_name] = generate_player_list(sheet_name, all_data[sheet_name])
+def find_next_purchase(data_dividendes, data_PPF, data_valeurs, poste, max_price=5000000, min_price=4000000):
+    potential_players = []
 
+    for player in data_dividendes:
+        if player['POSTE'] != poste:
+            continue
 
-data_buts = players_by_sheet['Buts']
-data_dividendes = players_by_sheet['Dividendes']
-data_DDJ = players_by_sheet['Dividendes Dernière journée']
-data_PPF = players_by_sheet['PPF']
-data_passes_dec = players_by_sheet['Passe Dé']
-data_penalty_reussi = players_by_sheet['Penalty Reussi']
-data_cj = players_by_sheet['CARTONS JAUNE']
-data_arrets = players_by_sheet['ARRETS GARDIEN']
-data_titu = players_by_sheet['TITULARISATION']
-data_match_j = players_by_sheet['MATCH JOUÉ']
-data_valeurs = players_by_sheet['PRIX']
+        dividendes = int(player['DIVIDENDE'])
+        matched_value = next((item for item in data_valeurs if item['NOM'] == player['NOM']), None)
+        matched_ppf = next((item for item in data_PPF if item['NOM'] == player['NOM']), None)
 
-print(data_valeurs)
+        if not matched_value or not matched_ppf:
+            continue
 
-# for player in data_arrets:
-#     player['RATIO'] = int(player['ARRETS']) / int(player['PRIX'])
-#
-# # Trier les gardiens par ratio
-# sorted_data = sorted(data_arrets, key=lambda x: x['RATIO'], reverse=True)
+        price = int(matched_value['PRIX'])
+        player_ppf = int(matched_ppf['PPF'])
 
-# Afficher les données triées
-# for player in sorted_data:
-#     print(player['NOM'], player['RATIO'])
+        if max_price >= price >= min_price and dividendes > 0 and player_ppf < 80:
+            potential_players.append(player)
 
+    return sorted(potential_players, key=lambda x: int(x['DIVIDENDE']), reverse=True)
 
-# print(data_arrets)
+POSTES = ['Gardien', 'Défenseur', 'Milieu', 'Attaquant']
 
-# def find_next_purchase(data_dividendes, data_PPF, max_price=4000000, min_dividendes=100000):
-#     potential_players = []
-#
-#     # Filtrer les joueurs selon les critères
-#     for player in data_dividendes:
-#         # Convertir les valeurs en entiers
-#         price = int(player['PRIX'])
-#         dividendes = int(player['DIVIDENDE'])
-#         matched_player = next((item for item in data_PPF if item['NOM'] == player['NOM']), None)
-#         if matched_player:
-#             player_ppf = int(matched_player['PPF'])
-#         else:
-#             print(f"Le joueur {player['NOM']} n'a pas été trouvé dans data_PPF.")
-#             continue
-#
-#         # Vérifier les critères
-#         if price < max_price and dividendes > min_dividendes and player_ppf < 80:  # PPF faible (< 5 par exemple)
-#             potential_players.append(player)
-#
-#     # Trier les joueurs potentiels par dividendes décroissants pour trouver le joueur avec les dividendes les plus élevés
-#     sorted_players = sorted(potential_players, key=lambda x: int(x['DIVIDENDE']), reverse=True)
-#
-#     return sorted_players
-#
-# # Chercher le meilleur achat
-# best_purchase = find_next_purchase(data_dividendes, data_PPF)
-#
-# # Afficher le meilleur joueur à acheter
-# if best_purchase:
-#     print("Meilleur achat potentiel :")
-#     print("Nom:", best_purchase[0]['NOM'])
-#     print("Prix:", best_purchase[0]['PRIX'])
-#     print("Dividendes:", best_purchase[0]['DIVIDENDE'])
-# else:
-#     print("Aucun joueur ne correspond aux critères.")
+for poste in POSTES:
+    best_purchase = find_next_purchase(players_by_sheet['Dividendes'], players_by_sheet['PPF'], players_by_sheet['PRIX'], poste)
 
-
-
-
-
-
+    if best_purchase:
+        print(f"Meilleur achat potentiel pour le poste de {poste}:")
+        print("Nom:", best_purchase[0]['NOM'])
+        print("Prix:", best_purchase[0]['PRIX'])
+        print("Dividendes:", best_purchase[0]['DIVIDENDE'])
+    else:
+        print(f"Aucun joueur pour le poste de {poste} ne correspond aux critères.")
