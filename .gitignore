@@ -161,3 +161,5 @@ cython_debug/
 
 # Fichier contenant les informations sensibles pour l'authentification Google Sheets
 credentials.json
+token.json
+
