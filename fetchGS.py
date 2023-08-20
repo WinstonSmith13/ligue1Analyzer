@@ -9,7 +9,7 @@ from googleapiclient.errors import HttpError
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 SAMPLE_SPREADSHEET_ID = '1EHdPEQm9Suj9UZJd4n8vACkXLdzx4cQEun4Png__hTI'
 SHEETS_NAMES = ['Buts', 'Dividendes', 'Dividendes Dernière journée', 'PPF', 'Passe Dé', 'Penalty Reussi',
-                'CARTONS JAUNE', 'ARRETS GARDIEN', 'TITULARISATION', 'MATCH JOUÉ', 'PRIX']
+                'CARTONS JAUNE', 'ARRETS GARDIEN', 'TITULARISATION', 'MATCH JOUÉ', 'PRIX', 'FBREF']
 
 
 def get_authenticated_service():
@@ -33,7 +33,7 @@ def get_all_sheet_data(service):
     sheet = service.spreadsheets()
 
     for sheet_name in SHEETS_NAMES:
-        range_name = f'{sheet_name}!A1:E500'  # Construct the range name
+        range_name = f'{sheet_name}!A1:AJ500'  # Construct the range name
         result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=range_name).execute()
         values = result.get('values', [])
 
