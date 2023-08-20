@@ -32,7 +32,7 @@ data_PPF_dict = {player['NOM']: player['PPF'] for player in players_by_sheet['PP
 # Évaluation Globale des Joueurs
 def evaluate_player_performance(player):
     ppf = float(data_PPF_dict.get(player['NOM'], 0))
-    score = (float(player['Buts/90']) + float(player['PD/90']) + float(player['xG/90']) + float(player['xAG/90'])) - (float(player['CJ']) * 0.1 + float(player['CR']) * 0.5)
+    score = (float(player['Buts/90']) + float(player['PD/90']) + float(player['xG/90']) + float(player['xAG/90']) + float(player['Min'])) - (float(player['CJ']) * 0.1 + float(player['CR']) * 0.5)
     return score, ppf
 
 # Analyse des Opportunités d'Investissement
@@ -40,7 +40,7 @@ def identify_investment_opportunities(players, seuil, limite_PPF):
     for player in players:
         score, ppf = evaluate_player_performance(player)
         if score > seuil and ppf < limite_PPF:
-            print("Opportunité d'investissement:", player['NOM'])
+            print("Opportunité d'investissement:", player['NOM'], player['Équipe'])
 
 # Analyse des Risques
 def identify_high_risks(players, seuil2, limite_PPF_haut):
@@ -50,10 +50,10 @@ def identify_high_risks(players, seuil2, limite_PPF_haut):
             print("Risque élevé:", player['NOM'])
 
 # Seuils
-seuil = 5.0
+seuil = 7.0  # Modifié pour prendre en compte l'importance accrue du temps de jeu
 limite_PPF = 50
-seuil2 = 3.0
-limite_PPF_haut = 100
+seuil2 = 4.0
+limite_PPF_haut = 80
 
 # Exécution
 identify_investment_opportunities(data_FBREF, seuil, limite_PPF)
