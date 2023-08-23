@@ -163,3 +163,8 @@ cython_debug/
 credentials.json
 token.json
 
+# fichier qui contient l'ensemble des données
+data/external/
+data/interim/
+data/processed/
+data/raw/
